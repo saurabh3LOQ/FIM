@@ -1,0 +1,99 @@
+Frequent Itemset Mining (FIM) Algorithms
+
+
+1. The Apriori Algorithm 
+Approach:
+- Generate itemsets in increasing order of their size. Prune the subtree as soon as a node fails to cross the required min-support level.
+- Single scan of dataset to find frequent itemsets of length 1 (S1).
+- Having formed Sk-1, to form Sk, we perform a join operation Sk-1 with Sk-1, the joining condition being that the lexicographically ordered first k-2 items are the same. Next, we delete all those itemsets from the join result that have some (k-1)-subset that is not in Sk-1 yielding Sk.
+- The algorithm terminates when Sk becomes empty. 
+- Datastructures like Hash-tree or Set enumeration tree could be used.
+
+Complexity:
+- I/O intensive, exactly L scans of the dataset needed, L = Length of the longest frequent itemset in the final solution.
+
+- CPU cost: During a scan, for each record, we traverse the list(datastructure) holding possible candidates. For a small min-support this list could easily become huge. Ck comparisons required at each level of tree, where Ck = No. of candidates for frequent itemsets at level k.
+
+
+
+
+
+
+
+
+2. The Partition Algorithm
+Approach:
+- Partition dataset into manageable chunks (P1, P2... PN). 
+- Load each partition Pi's in main memory. 
+- Do Apriori mining to generate local results. 
+- Pool local results to generate Global results.
+- Final scan to find actual freq. count of the candidates and determine the actual frequent itemsets.
+Complexity:
+- In-memory processing alleviates the I/O bottleneck as only O(logN) disk-based scans of the dataset are required. Due to two steps involved of i) confirming local candidates for frequent itemsets and ii) confirming global(merged) candidates for frequent itemsets. The number of comparisons done are twice than the Apriori approach. (CPU intensive).
+Issues:
+- Could be sensitive to distortion in data distribution across partitions – some partitions could be very dissimilar and  contribute mostly spurious candidate itemsets.
+
+
+
+
+
+
+
+
+
+3. The Sampling Algorithm
+Approach:
+- To estimate characterstic of a population we study the characterstics of a random sample taken uniformly out of the population.
+- Select M records randomly (uniform distribution). Mine the frequent itemsets (Fs) of the sample and treat them as overall frequent itemsets of whole dataset. 
+- Trading quality/accuracy for processing time.
+- Deriving exact results from sampling:
+*Discarding the included infrequent itemsets can be done by calculating actual supports in a single scan on entire dataset.
+*Including the left-out actually frequent itemsets can be done by using The Negative border Technique (Ns).
+Complexity:
+- Sampling approach is best when we are satisfied with the approximate results. Otherwise 'fixing' our result by 'doing a scan on dataset' to confirm results or 'using The Negative Border Technique' to bring in the left-out frequent itemsets could be as expensive as running Apriori algorithm because No. of candidates counted (Fs+Ns) is similar to total no. of candidates in Apriori.
+Notes:
+- For generating results within a certain confidence interval we could use Solvin's formula to determine required sample size. Slovin's formula is used when nothing about the behavior of a population is known at all.
+- Could also use Monte Carlo/Bootstrap method(s) which uses repeated sampling (with or without replacement) to determine the properties of some phenomenon (or characterstic) of the population. 
+
+
+
+
+
+
+4. The Frequent Pattern(FP) Growth Algorithm
+Approach: 
+- FP-Tree represents the dataset in compressed form. No candidate generation is followed.
+- A single scan of dataset is made and is represented as FP-tree. Subsequently it only uses this FP-tree to mine frequent itemsets.
+- Requires Pre-processing step:  An ordering needs to be imposed on the sets, which is done in decreasing order of the supports(just a heuristic).
+- Datastructure has two parts. i) Prefix tree ii) Header list.
+- Header List maintains a list of each frequent item. For each node in header list a linked list is formed to keep track of all occurances of the item.
+- Each node maintains a count field to represent no. Of records in dataset with given prefix.
+- Inserting a record: First the record is sorted, keeping only frequent items. Starting from the root, the longest prefix of the record is traced such that, a path exists from the root having the items in that prefix. Items beyond the longest prefix are stored as descendents along same path. Also, pointers from Header list are updated.
+- Deriving frequent itemsets: The Header list pertaining to each item is traversed and resp. counts are accumulated. If it passes the min-support thershold we need to evaluate supports of it's supersets. 
+- Supersets(in terms of all paths ending at that element) are represented in path from root to the node. As a bottom up approach we decompose the problem recursively.
+Complexity:
+- Building FP Tree requires only 2 scans of the datasets. Hence, much faster than Apriori.
+- Would work very efficiently on dense datasets who share lots of common prefixes.
+- Memory constraint: FP-Tree grows linearly with dataset size and could easily run out of memory.
+
+
+
+
+
+
+
+
+5. The Oracle Algorithm
+Approach:
+- Counters for singletons and pairs are calculated and stored in a lookup array. Then for these frequent itemset F and it's negative border N, supports of longer itemsets in F Ṵ N are calculated in a single scan over the dataset using partitioning. Information is stored in a DAG structure and is traversed in DFS manner.
+- TID-vectors are used in the counting process.
+
+Complexity:
+- CPU utilization: Oracle is optimal in the sense that only required itemsets are enumerated and cost of enumeration is constant O(1) with the help of TID-lists and bit vectors. The intersection of both parent lists takes O(|P2|) time. P2 = Second parent's TID list. *Cost for first parent's TID construction is amortized over the intersection for all it's children nodes.
+Memory utilization: 
+- The 1-d and 2-d arrays for storing counters of singletons and pairs. 
+- The DAG structure for storing counters (and tidlists) of longer itemsets. 
+- The current partition.
+
+
+
